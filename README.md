@@ -1,4 +1,4 @@
-# LGLJ_FOFA
+# FOFA_Extract_Fingerprint
 
 半自动化指纹提取。
 
