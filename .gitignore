@@ -1,0 +1,9 @@
+# Ignore .pyc and .pyo files
+*.pyc
+*.pyo
+
+# Ignore __pycache__ directory
+__pycache__/
+ 
+# Ignore test.py
+test.py
