@@ -16,5 +16,5 @@
 ### 运行
 
 ```powershell
-python ./LGLJ_FOFA.py
+python .\FOFA_Extract_Fingerprint.py
 ```
