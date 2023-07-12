@@ -297,21 +297,22 @@ def get_fingerprint(file, all_count, url_list, output_file_names):
     print(f"File {file} 's fingerprint gets.")
 
 
-def work(file, output_file_names):
-    print(f"Begin to process file: {file}")
-    if not init(file):
-        config.non_metadata_file.append(file)
-        return 
-    # print(config.SearchKEY)
-    all_count, url_list = fofa.spider()
-    print(f"File {file} 's target url gets.")
-    get_fingerprint(file, all_count, url_list, output_file_names)
+# def work(file, output_file_names):
+#     print(f"Begin to process file: {file}")
+#     if not init(file):
+#         config.non_metadata_file.append(file)
+#         return 
+#     # print(config.SearchKEY)
+#     all_count, url_list = fofa.spider()
+#     print(f"File {file} 's target url gets.")
+#     get_fingerprint(file, all_count, url_list, output_file_names)
 
 
 menu = """
 1. Batch extraction (From config.folder_path).
 2. Batch extraction (From config.deal_file_names).
-3. Single extraction."""
+3. Single extraction.
+4. No metadata file extraction."""
 
 def Batch(opt):
     if opt == "1":
@@ -323,9 +324,20 @@ def Batch(opt):
     for i in range(start,len(input_file_names)):
         file = input_file_names[i]
         print("="*50 + f" INDEX {i} " + "="*50)
-        work(file, output_file_names)
-        print("="*110)
-        print()
+        print(f"Begin to process file: {file}")
+        
+        if not init(file):
+            config.non_metadata_file.append(file)
+            return 
+        
+        # work(file, output_file_names)
+        all_count, url_list = fofa.spider()
+        print(f"File {file} 's target url gets.")
+        get_fingerprint(file, all_count, url_list, output_file_names)
+        
+        print("="*110+'\n')
+        
+    
     print(f"There are {len(config.non_metadata_file)} files which doesn't contains metadata.")
     print("Thay are: ")
     print(config.non_metadata_file)
@@ -339,17 +351,43 @@ def Single():
     find_fingerprint(json_ans, html_list, header_list, all_count)
     print(json_ans)
 
+def non_metadata_Batch():
+    input_file_names = get_file_names(config.folder_path)
+    
+    for file in input_file_names:
+        if not init(file):
+            config.non_metadata_file.append(file)
+    print(f"There are {len(input_file_names)} files in total.\n There are {len(config.non_metadata_file)} files which doesn't contains metadata.")
+    print("Thay are: ")
+    print(config.non_metadata_file)
+    
+    start = int(input(f"\nPlease enter a starting index(0, {len(input_file_names)}): "))
+    output_file_names = get_file_names(config.output_path)
+    for i in range(start,len(config.non_metadata_file)):
+        file = config.non_metadata_file[i]
+        print("="*50 + f" INDEX {i} " + "="*50)
+        print(f"Begin to process file: {file}")
+        
+        config.SearchKEY = input("Please input your FOFA's query key: ")
+        all_count, url_list = fofa.spider()
+        print(f"File {file} 's target url gets.")
+        get_fingerprint(file, all_count, url_list, output_file_names)
+        
+        print("="*110)
+        print()
+
 def main():
     print(menu)
     opt = input("Please input your option: ")
     fofa.checkSession()
     if opt == "3":
         Single()
+    elif opt == "4":
+        non_metadata_Batch()
     else:
         Batch(opt)
     
     
-
 if __name__ == '__main__':
     logo()
     main()
