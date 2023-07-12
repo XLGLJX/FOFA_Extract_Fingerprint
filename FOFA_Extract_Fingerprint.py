@@ -210,12 +210,11 @@ def find_fingerprint(json_ans, html_list, header_list, all_count, exit_output = 
     tmp_html = html_list[0]
     tmp_tree = etree.HTML(tmp_html)
     tot = 0
-    
-    #header
-    find_header_json()
     #icon hash
     if not exit_output:
         find_icon_json()
+    #header
+    find_header_json()
     #body
     ## js file
     find_js_json()
@@ -361,7 +360,7 @@ def non_metadata_Batch():
     print("Thay are: ")
     print(config.non_metadata_file)
     
-    start = int(input(f"\nPlease enter a starting index(0, {len(input_file_names)}): "))
+    start = int(input(f"\nPlease enter a starting index(0, {len(config.non_metadata_file)}): "))
     output_file_names = get_file_names(config.output_path)
     for i in range(start,len(config.non_metadata_file)):
         file = config.non_metadata_file[i]
