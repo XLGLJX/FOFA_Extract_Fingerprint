@@ -261,10 +261,10 @@ def get_fingerprint(file, all_count, url_list, output_file_names):
         print(f"Successfully found the output file {output_file} in {config.output_path}.")
         exit_output = True
         json_ans = json.load(open(output_file_path, "r"))
-        tmp = json_tmp["rules"]
+        tmp = copy.deepcopy(json_tmp["rules"])
         if "icon_hash" in json_ans["rules"].keys():
-            tmp["icon_hash"] = json_ans["rules"]["icon_hash"]
-        json_ans["rules"] = tmp
+            tmp["icon_hash"] = copy.deepcopy(json_ans["rules"]["icon_hash"])
+        json_ans["rules"] = copy.deepcopy(tmp)
     else:
         print(f"Could not find output file.")
         json_ans = copy.deepcopy(json_tmp)
