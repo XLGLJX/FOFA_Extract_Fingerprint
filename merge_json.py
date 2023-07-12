@@ -20,7 +20,7 @@ def merge_json_files(folder_path, output_file):
 
     print(f"successfully merged!")
 
-folder_path = config.output_path
-output_file = 'merged.json'
-
-merge_json_files(folder_path, output_file)
+if __name__ == "__main__":    
+    folder_path = config.output_path
+    output_file = 'merged.json'
+    merge_json_files(folder_path, output_file)

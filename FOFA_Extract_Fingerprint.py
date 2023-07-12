@@ -10,113 +10,26 @@ import yaml
 import json
 from requests.packages import urllib3
 from tqdm import trange
+from Tools import get_file_names, other_to_fofa_query, read_yaml
+from Default_value import file_common_names, json_tmp, common_header, common_header_value
+import copy
 import re
+from collections import Counter
 
 urllib3.disable_warnings()
 def logo():
     print('''
-   ,--,                  ,--,                                                                          
-,---.'|               ,---.'|        ,---._                        ,----..                             
-|   | :     ,----..   |   | :      .-- -.' \             ,---,.   /   /   \      ,---,.   ,---,        
-:   : |    /   /   \  :   : |      |    |   :          ,'  .' |  /   .     :   ,'  .' |  '  .' \       
-|   ' :   |   :     : |   ' :      :    ;   |        ,---.'   | .   /   ;.  \,---.'   | /  ;    '.     
-;   ; '   .   |  ;. / ;   ; '      :        |        |   |   .'.   ;   /  ` ;|   |   .':  :       \    
-'   | |__ .   ; /--`  '   | |__    |    :   :        :   :  :  ;   |  ; \ ; |:   :  :  :  |   /\   \   
-|   | :.'|;   | ;  __ |   | :.'|   :                 :   |  |-,|   :  | ; | ':   |  |-,|  :  ' ;.   :  
-'   :    ;|   : |.' .''   :    ;   |    ;   |        |   :  ;/|.   |  ' ' ' :|   :  ;/||  |  ;/  \   \ 
-|   |  ./ .   | '_.' :|   |  ./___ l                 |   |   .''   ;  \; /  ||   |   .''  :  | \  \ ,' 
-;   : ;   '   ; : \  |;   : ;/    /\    J   :        '   :  '   \   \  ',  / '   :  '  |  |  '  '--'   
-|   ,/    '   | '/  .'|   ,//  ../  `..-    ,        |   |  |    ;   :    /  |   |  |  |  :  :         
-'---'     |   :    /  '---' \    \         ;         |   :  \     \   \ .'   |   :  \  |  | ,'         
-           \   \ .'          \    \      ,'          |   | ,'      `---`     |   | ,'  `--''           
-            `---`             "---....--'            `----'                  `----'               
+   _____ ____  ______        ______      _                  _     ______ _                                  _       _   
+ |  ____/ __ \|  ____/\     |  ____|    | |                | |   |  ____(_)                                (_)     | |  
+ | |__ | |  | | |__ /  \    | |__  __  _| |_ _ __ __ _  ___| |_  | |__   _ _ __   __ _  ___ _ __ _ __  _ __ _ _ __ | |_ 
+ |  __|| |  | |  __/ /\ \   |  __| \ \/ / __| '__/ _` |/ __| __| |  __| | | '_ \ / _` |/ _ \ '__| '_ \| '__| | '_ \| __|
+ | |   | |__| | | / ____ \  | |____ >  <| |_| | | (_| | (__| |_  | |    | | | | | (_| |  __/ |  | |_) | |  | | | | | |_ 
+ |_|    \____/|_|/_/    \_\ |______/_/\_\\__|_|  \__,_|\___|\__| |_|    |_|_| |_|\__, |\___|_|  | .__/|_|  |_|_| |_|\__|
+                        ______                               ______               __/ |         | |                     
+                       |______|                             |______|             |___/          |_|                     
+        
                                                                             —— extends from fofa spider       
     ''')    
-
-def get_file_names(folder_path):
-    file_names = []
-    for root, dirs, files in os.walk(folder_path):
-        for file_name in files:
-            file_names.append(file_name)
-    return file_names
-
-def other_to_fofa_query(other_query):
-    fofa_query_elements = []
-    inside_quotes = False
-    current_element = ""
-    
-    for char in other_query:
-        if char == '"':
-            inside_quotes = not inside_quotes
-        elif char == ' ' and not inside_quotes:
-            if current_element:
-                fofa_query_elements.append(current_element)
-                current_element = ""
-            continue
-        
-        current_element += char
-    
-    if current_element:
-        fofa_query_elements.append(current_element)
-
-    converted_elements = []
-    flag = False
-    flag2 = False
-    # print(fofa_query_elements)
-    for element in fofa_query_elements:
-        if flag == True:
-            flag = False
-            converted_elements[-1] += " " + element + "'"
-        if element.startswith("ip:"):
-            converted_elements.append("ip=" + element[3:])
-        elif element.startswith("port:"):
-            converted_elements.append("port=" + element[5:])
-        elif element.startswith("hostname:"):
-            converted_elements.append("host=" + element[9:])
-        elif element.startswith("os:"):
-            converted_elements.append("os=" + element[3:])
-        elif element.startswith("country:"):
-            converted_elements.append("country=" + element[8:])
-        elif element.startswith("city:"):
-            converted_elements.append("city=" + element[5:])
-        elif element.startswith("org:"):
-            converted_elements.append("isp=" + element[4:])
-        elif element.startswith("product:") or element.startswith("version:"):
-            converted_elements.append("banner=" + element[8:])
-        elif element.startswith("after:"):
-            converted_elements.append("first_seen=>" + element[6:])
-        elif element.startswith("before:"):
-            converted_elements.append("first_seen=<" + element[7:])
-        elif element.startswith("html:"):
-            converted_elements.append("body=" + element[5:])
-        elif element.startswith("http.html:"):
-            converted_elements.append("body=" + element[10:])
-        elif element.startswith("http.title:"):
-            converted_elements.append("title=" + element[11:])
-        elif element.startswith("title:"):
-            converted_elements.append("title=" + element[6:])
-        elif element.startswith("http.favicon.hash:"):
-            converted_elements.append("icon_hash=" + element[18:])
-        elif element.startswith("intext:"):
-            converted_elements.append("body=" + element[7:])
-        elif element.startswith("inurl:"):
-            converted_elements.append("body=" + element[6:])
-        elif element.startswith("Server:"):
-            converted_elements.append("banner='" + element)
-            flag = True
-        elif element == "||":
-            flag2 = True
-    
-    if flag2:
-        fofa_query = " || ".join(converted_elements)
-    else:
-        fofa_query = " && ".join(converted_elements)
-    return fofa_query
-
-def read_yaml(file_path):
-    with open(file_path, 'r') as file:
-        data = yaml.safe_load(file)
-    return data
 
 def init(file):
     filepath = config.folder_path+ "\\" + file
@@ -142,69 +55,32 @@ def init(file):
     print(f"SearchKEY: {config.SearchKEY}")
     return True
 
-def get_fingerprint(all_count,url_list):
-    html_list = []
-    header_list = []
-    for i in trange(len(url_list)):
-        url = url_list[i]
-        for _ in range(2):
-            try:
-                response = requests.get(url, headers=config.headers,verify=False)
-                if response.status_code != 200:
-                    continue
-                html_list.append(response.text)
-                header_list.append(response.headers)
-                break
-            except:
-                pass
 
-    print(f"total count of web: {len(url_list)}, effective count: {len(html_list)}")
-    
-    json_ans = {
-        "product_name": "",
-        "company": "",
-        "industry": "",
-        "level": 2,
-        "rules": {
-            "body": [],
-            "header": [],
-            "icon_hash": ""
-        }
-    }
-    # get name
-    for key in json_ans.keys():
-        if key == "level":
-            break
-        s = input("input "+key+" :")
-        if s != "q":
-            json_ans[key] = s
-    
+def find_fingerprint(json_ans, html_list, header_list, all_count, exit_output = False):
     def check(new_query):
-        new_count = fofa.spider_count(config.SearchKEY + " && " + new_query)
+        nonlocal tot
+        # new_count = fofa.spider_count(config.SearchKEY + " && " + new_query)
+        new_count = fofa.spider_count(new_query)
         per = new_count/all_count
         print(f"        {new_query} —— {per}")
-        if per >= 0.93:
+        if per >= config.pro_lower and per <= config.pro_upper:
+            tot += 1
             return True
         return False
-            
+    
     def find_header_json():
         print("Begin to find fingerprint headers.")
-        common_headers = dict(header_list[0])
-
-        for headers in header_list[1:]:
-            tmp_key = []
-            for key, value in common_headers.items():
-                if key not in headers or headers[key] != value:
-                    tmp_key.append(key)
-            for key in tmp_key:
-                common_headers.pop(key)
-
+        header_tmp = [(key, value) for header in header_list  for key, value in header.items() if key not in common_header and value not in common_header_value]
+        tuple_counts = Counter(header_tmp)
+        query_tuple = []
+        for tuple_, count in tuple_counts.items():
+            # print(f"{tuple_}: {count}")
+            if count > len(header_list)*config.pro_first_lower:
+                query_tuple.append(tuple_)
         
-        print(f"    Find {len(common_headers)} common_headers in the first web.")
-        for key, value in common_headers.items():
-            if key == 'Content-Type' and "text/html" in value:
-                print("    Skip Content-Type: text/html")
-                continue
+        print(f"    Find {len(query_tuple)} query header.")
+        print(f"    Query header: {query_tuple}")
+        for key, value in query_tuple:
             new_query = f"header='{value}'"
             if check(new_query):
                 json_ans["rules"]["header"].append(key+": "+value)
@@ -223,40 +99,34 @@ def get_fingerprint(all_count,url_list):
     
     def find_js_json():
         print("Begin to find fingerprint js file.")
-        js_file_common_names = [
-                    "main.js",
-                    "script.js",
-                    "app.js",
-                    "utils.js",
-                    "jquery.js",
-                    "jquery.min.js",
-                    "bootstrap.js",
-                    "analytics.js",
-                    "carousel.js",
-                    "validation.js",
-                    "ajax.js",
-                    "default.min.js",
-                    "default.js"
-                ]
+
+        link_elements = tmp_tree.xpath('//a[@href]')
+        link_files = [element.get('href') for element in link_elements]
 
         script_elements = tmp_tree.xpath('//script[@src]')
-        js_files = [element.get('src') for element in script_elements]
-        js_files = [x.split('/')[-1] for x in js_files]
-        print(f"    Find {len(js_files)} js files in the first web.")
-        for js_file in js_files:
+        script_files = [element.get('src') for element in script_elements]
+        all_files = link_files + script_files
+        all_files = all_files + [x.split('/')[-1] for x in all_files]
+        all_files = list(set(all_files))
+        # script_elements = tmp_tree.xpath('//script[@src]')
+        # js_files = [element.get('src') for element in script_elements]
+        # js_files = [x.split('/')[-1] for x in js_files]
+        
+        print(f"    Find {len(all_files)} js files in the first web.")
+        for inner_file in all_files:
             cnt = 1
-            if js_file in js_file_common_names:
+            if inner_file in file_common_names:
                 continue
             for i in range(1,len(html_list)):
-                if js_file in html_list[i]:
+                if inner_file in html_list[i]:
                     cnt += 1
             percent = cnt/len(html_list)
-            print(f"    {js_file} —— {percent}")
-            if percent >= 0.9:
-                new_query = f"body='{js_file}'"
+            print(f"    {inner_file} —— {percent}")
+            if percent >= config.pro_first_lower:
+                new_query = f"body='{inner_file}'"
                 if check(new_query):
-                    json_ans["rules"]["body"].append(js_file)
-                    print(f"        new rule: {js_file}")
+                    json_ans["rules"]["body"].append(inner_file)
+                    print(f"        new rule: {inner_file}")
     
     def find_fun_json():
         print("Begin to find fingerprint function.")
@@ -280,22 +150,18 @@ def get_fingerprint(all_count,url_list):
                     cnt += 1
             percent = cnt/len(html_list)
             print(f"    {function_name} —— {percent}")
-            if percent >= 0.9:
+            if percent >= 0.25:
                 new_query = f"body='{function_name}'"
                 if check(new_query):
                     json_ans["rules"]["body"].append(function_name)
                     print(f"        new rule: {function_name}")
     
     def find_color_json():
-        color_elements = tmp_tree.xpath('//*[@style[contains(@style, "color:")]]')
-        colors = [element.attrib['style'].split('color:')[1].split(';')[0].strip() for element in color_elements]
-
-        css_selector = '[style*="color:"]'
-        color_elements = tmp_tree.cssselect(css_selector)
-        colors = [element.get('style').split('color:')[1].split(';')[0].strip() for element in color_elements]
+        pattern = r'(#[A-Fa-f0-9]{6}|#[A-Fa-f0-9]{3})\b'
+        colors = [color for html in html_list for color in re.findall(pattern, html)]
         colors = list(set(colors))
         
-        print(f"    Find {len(colors)} colors in the first web.")
+        print(f"    Find {len(colors)} colors.")
         for color in colors:
             if color in "#000000" or color.upper() in "#FFFFFF":
                 continue
@@ -305,11 +171,15 @@ def get_fingerprint(all_count,url_list):
                     cnt += 1
             percent = cnt/len(html_list)
             print(f"    {color} —— {percent}")
-            if percent >= 0.9:
+            if percent >= config.pro_first_lower:
                 new_query = f"body='{color}'"
+                new_query1 = f"body='color:{color}'"
                 if check(new_query):
                     json_ans["rules"]["body"].append(color)
                     print(f"        new rule: {color}")
+                elif check(new_query1):
+                    json_ans["rules"]["body"].append("color:"+color)
+                    print(f"        new rule: color:{color}")
     
     def find_remark_json():
         pattern1 = r"(<!--.*?-->)"
@@ -318,10 +188,10 @@ def get_fingerprint(all_count,url_list):
         comments2 = re.findall(pattern2, tmp_html)
         comments.extend(comments2)
         
-        print(f"    Find {len(comments)} comments in the first web.")
         comments = list(set(comments))
+        print(f"    Find {len(comments)} comments in the first web.")
         for comment in comments:
-            if len(comment)>20:
+            if len(comment)>50:
                 continue
             cnt = 1
             for i in range(1,len(html_list)):
@@ -330,7 +200,7 @@ def get_fingerprint(all_count,url_list):
             percent = cnt/len(html_list)
             
             print(f"    {comment} —— {percent}")
-            if percent >= 0.9:
+            if percent >= config.pro_first_lower:
                 new_query = f"body='{comment}'"
                 if check(new_query):
                     json_ans["rules"]["body"].append(comment)
@@ -339,11 +209,13 @@ def get_fingerprint(all_count,url_list):
     # get rules
     tmp_html = html_list[0]
     tmp_tree = etree.HTML(tmp_html)
+    tot = 0
     
     #header
     find_header_json()
     #icon hash
-    find_icon_json()
+    if not exit_output:
+        find_icon_json()
     #body
     ## js file
     find_js_json()
@@ -354,41 +226,126 @@ def get_fingerprint(all_count,url_list):
     ## remark
     find_remark_json()
     
+    print(f"We find {tot} rules!!!")
+
+
+
+def get_base_web(url_list):
+    html_list = []
+    header_list = []
+    for i in trange(len(url_list)):
+        url = url_list[i]
+        for _ in range(2):
+            try:
+                response = requests.get(url, headers=config.headers,verify=False)
+                if response.status_code != 200:
+                    continue
+                response.encoding = response.apparent_encoding
+                html_list.append(response.text)
+                # html_list.append(response.content)
+                header_list.append(response.headers)
+                break
+            except:
+                pass
+    print(f"total count of web: {len(url_list)}, effective count: {len(html_list)}")
+    return html_list, header_list
+
+def get_fingerprint(file, all_count, url_list, output_file_names):
+    html_list, header_list = get_base_web(url_list)
+    
+    output_file = file[:-5]+"_fingerprint.json"
+    output_file_path = config.output_path + "\\" + output_file
+    exit_output = False
+    if output_file in output_file_names:
+        print(f"Successfully found the output file {output_file} in {config.output_path}.")
+        exit_output = True
+        json_ans = json.load(open(output_file_path, "r"))
+        tmp = json_tmp["rules"]
+        if "icon_hash" in json_ans["rules"].keys():
+            tmp["icon_hash"] = json_ans["rules"]["icon_hash"]
+        json_ans["rules"] = tmp
+    else:
+        print(f"Could not find output file.")
+        json_ans = copy.deepcopy(json_tmp)
+        # get name
+        for key in json_ans.keys():
+            if key == "level":
+                break
+            s = input("input "+key+" :")
+            if s != "q":
+                json_ans[key] = s
+    if config.SearchKEY.count('"') == 2:
+        if config.SearchKEY.startswith("icon_hash"):
+            json_ans["rules"]["icon_hash"] = config.SearchKEY[10:]
+        else:
+            json_ans["rules"]["body"].append(config.SearchKEY[config.SearchKEY.index('"')+1:-1])
+            
+    find_fingerprint(json_ans, html_list, header_list, all_count, exit_output)
+    
     tmp_key = []
     for key,value in json_ans["rules"].items():
         if len(value) == 0:
             tmp_key.append(key) 
     for key in tmp_key:
         json_ans["rules"].pop(key)
-    return json_ans
+        
+    with open(output_file_path, "w") as f:
+        json.dump(json_ans, f, indent=4)
+    print(f"File {file} 's fingerprint gets.")
 
 
-def work(file):
-    # print(f"Begin to process file: {file}")
-    # if not init(file):
-    #     return 
+def work(file, output_file_names):
+    print(f"Begin to process file: {file}")
+    if not init(file):
+        config.non_metadata_file.append(file)
+        return 
+    # print(config.SearchKEY)
     all_count, url_list = fofa.spider()
     print(f"File {file} 's target url gets.")
-    fgp = get_fingerprint(all_count,url_list)
-    
-    with open(config.output_path + "\\" + file[:-5]+"_fingerprint.json", "w") as f:
-        json.dump(fgp, f, indent=4)
-    print(f"File {file} 's fingerprint gets.")
-    
-def main():
-    
-    fofa.checkSession()
-    file_names = get_file_names(config.folder_path)
-    
-    work("")
-    start = int(input(f"Please enter a starting index(0, {len(file_names)}): "))
-    # for i,file in enumerate(file_names):
-    for i in range(start,len(file_names)):
-        file = file_names[i]
+    get_fingerprint(file, all_count, url_list, output_file_names)
+
+
+menu = """
+1. Batch extraction (From config.folder_path).
+2. Batch extraction (From config.deal_file_names).
+3. Single extraction."""
+
+def Batch(opt):
+    if opt == "1":
+        input_file_names = get_file_names(config.folder_path)
+    elif opt == "2":
+        input_file_names = config.deal_file_names
+    output_file_names = get_file_names(config.output_path)
+    start = int(input(f"Please enter a starting index(0, {len(input_file_names)}): "))
+    for i in range(start,len(input_file_names)):
+        file = input_file_names[i]
         print("="*50 + f" INDEX {i} " + "="*50)
-        work(file)
+        work(file, output_file_names)
         print("="*110)
         print()
+    print(f"There are {len(config.non_metadata_file)} files which doesn't contains metadata.")
+    print("Thay are: ")
+    print(config.non_metadata_file)
+
+def Single():
+    config.SearchKEY = input("Please input your FOFA's query key: ")
+    all_count, url_list = fofa.spider()
+    # print(f"File {file} 's target url gets.")
+    json_ans = copy.deepcopy(json_tmp)
+    html_list, header_list = get_base_web(url_list)
+    find_fingerprint(json_ans, html_list, header_list, all_count)
+    print(json_ans)
+
+def main():
+    print(menu)
+    opt = input("Please input your option: ")
+    fofa.checkSession()
+    if opt == "3":
+        Single()
+    else:
+        Batch(opt)
+    
+    
 
 if __name__ == '__main__':
     logo()

@@ -4,7 +4,7 @@ import base64
 import time
 import config
 from urllib.parse import quote
-
+import chardet
 
 def logo():
     print('''
@@ -66,10 +66,12 @@ def init():
 
 
 def spider():
-    config.SearchKEY = 'body="LanProxy"'
     searchbs64 = quote(str(base64.b64encode(config.SearchKEY.encode()), encoding='utf-8'))
     print("Target page :https://fofa.info/result?qbase64=" + searchbs64)
-    html = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers).text
+    # html = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers).text
+    response = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers)
+    response.encoding = response.apparent_encoding
+    html = response.text
     tree = etree.HTML(html)
     try:
         pagenum = tree.xpath('//li[@class="number"]/text()')[-1]
@@ -100,9 +102,12 @@ def spider():
 
 def spider_count(new_key):
     import random
-    time.sleep(random.randint(1,5))
+    time.sleep(random.randint(4,8))
     searchbs64 = quote(str(base64.b64encode(new_key.encode()), encoding='utf-8'))
-    html = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers).text
+    # html = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers).text
+    response = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers)
+    response.encoding = response.apparent_encoding
+    html = response.text
     tree = etree.HTML(html)
     try:
         all_count = tree.xpath('//span[@class="el-pagination__total"]/text()')[-1].split(' ')[1]
