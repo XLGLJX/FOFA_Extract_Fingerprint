@@ -256,6 +256,7 @@ def get_fingerprint(file, all_count, url_list, output_file_names):
     output_file = file[:-5]+"_fingerprint.json"
     output_file_path = config.output_path + "\\" + output_file
     exit_output = False
+    json_ans = {}
     if output_file in output_file_names:
         print(f"Successfully found the output file {output_file} in {config.output_path}.")
         exit_output = True
