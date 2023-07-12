@@ -280,9 +280,11 @@ def get_fingerprint(file, all_count, url_list, output_file_names):
             json_ans["rules"]["icon_hash"] = config.SearchKEY[10:]
         else:
             json_ans["rules"]["body"].append(config.SearchKEY[config.SearchKEY.index('"')+1:-1])
-            
-    find_fingerprint(json_ans, html_list, header_list, all_count, exit_output)
-    
+          
+    if len(html_list) != 0:
+        find_fingerprint(json_ans, html_list, header_list, all_count, exit_output)
+    else:
+        print("Error, no vaild web!!!")
     tmp_key = []
     for key,value in json_ans["rules"].items():
         if len(value) == 0:
