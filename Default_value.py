@@ -21,7 +21,8 @@ common_header = [
     "X-Frame-Options",
     'Status',
     'Set-Cookie',
-    "Transfer-Encoding"
+    "Transfer-Encoding",
+    ""
 ]
 common_header_value = [
     'chunked',

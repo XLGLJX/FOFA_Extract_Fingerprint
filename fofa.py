@@ -44,7 +44,7 @@ def preCheckSession():
     rep = requests.get('https://fofa.info/result?qbase64=' + searchbs64 + "&page=1&page_size=10",
                        headers=config.headers)
 
-    tree = etree.HTML(rep.text)
+    tree = etree.HTML(rep.text.encode('utf-8'))
     urllist = tree.xpath('//span[@class="hsxa-host"]/a/@href')
     return len(urllist)==0
 
@@ -72,7 +72,7 @@ def spider():
     response = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers)
     response.encoding = response.apparent_encoding
     html = response.text
-    tree = etree.HTML(html)
+    tree = etree.HTML(html.encode('utf-8'))
     try:
         pagenum = tree.xpath('//li[@class="number"]/text()')[-1]
     except Exception as e:
@@ -91,7 +91,7 @@ def spider():
         print("    Now write " + str(i) + " page")
         rep = requests.get('https://fofa.info/result?qbase64=' + searchbs64+"&page="+str(i)+"&page_size=10", headers=config.headers)
 
-        tree = etree.HTML(rep.text)
+        tree = etree.HTML(rep.text.encode('utf-8'))
         urllist.extend(tree.xpath('//span[@class="hsxa-host"]/a/@href'))
         if i==int(config.StopPage):
             break
@@ -108,7 +108,7 @@ def spider_count(new_key):
     response = requests.get(url="https://fofa.info/result?qbase64=" + searchbs64, headers=config.headers)
     response.encoding = response.apparent_encoding
     html = response.text
-    tree = etree.HTML(html)
+    tree = etree.HTML(html.encode('utf-8'))
     try:
         all_count = tree.xpath('//span[@class="el-pagination__total"]/text()')[-1].split(' ')[1]
     except Exception as e:
@@ -121,9 +121,6 @@ def main():
     checkSession()
     init()
     spider()
-
-
-
 
 if __name__ == '__main__':
     main()

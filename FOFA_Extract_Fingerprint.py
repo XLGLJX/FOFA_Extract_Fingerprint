@@ -208,7 +208,7 @@ def find_fingerprint(json_ans, html_list, header_list, all_count, exit_output = 
     
     # get rules
     tmp_html = html_list[0]
-    tmp_tree = etree.HTML(tmp_html)
+    tmp_tree = etree.HTML(tmp_html.encode('utf-8'))
     tot = 0
     #icon hash
     if not exit_output:

@@ -1,5 +1,7 @@
 # FOFA_Extract_Fingerprint
 
+![image-20230713103142709](https://s2.loli.net/2023/07/13/h43nW5QGd1tlfYS.png)
+
 半自动化指纹提取。
 
 **扩充自[Fofa-script](https://github.com/Cl0udG0d/Fofa-script)**
@@ -45,35 +47,47 @@
 python .\FOFA_Extract_Fingerprint.py
 ```
 
-
 ### 格式规定
 
 对于待提取文档名字 `abcd.yaml`，将输出文档格式 `abcd_fingerprint.json`
 
-
 ### 模式选择
 
-共有三种模式：
+共有四种模式：
 
 ```python
 menu = """
 1. Batch extraction (From config.folder_path).
 2. Batch extraction (From config.deal_file_names).
-3. Single extraction."""
+3. Single extraction.
+4. No metadata file extraction."""
 ```
 
-![1689130517567](image/README/1689130517567.png)
+![image-20230713101132751](https://s2.loli.net/2023/07/13/UGsEt8kLFgyJBPC.png)
 
 分别为：
 
-- 批处理提取（文件名自动取自 `config.folder_path 路径下`）
-  - 提取给定文件
-- 批处理提取（文件名取自 `config.deal_file_names`）
-  - 提取给定的文件
-  - `config.deal_file_names`：以 `python` 列表格式，内容为字符串形式的文件名
-- 单特征提取
-  - 手动输入 `FOFA`查询条件，获取查询结果数，以此为指纹提取的参照。
-  - 对于没有 `metadata`的文档，可以后续通过此选项，手动指定基准`FOFA`查询条件
+1. 批处理提取（文件名自动取自 `config.folder_path 路径下`）
+   - 提取给定文件
+
+2. 批处理提取（文件名取自 `config.deal_file_names`）
+
+   - 提取给定的文件
+
+   - `config.deal_file_names`：以 `python` 列表格式，内容为字符串形式的文件名
+
+3. 单特征提取
+
+   - **手动输入** `FOFA`查询条件，获取查询结果数，以此为指纹提取的参照。
+
+   - 对于没有 `metadata`的文档，可以后续通过此选项，手动指定基准 `FOFA`查询条件
+
+4. 对于没有`metadata`的文件进行批处理提取
+   - 对于 `config.folder_path 路径下`的文件，判断文件内部是否有`metadata`，只对没有`metadata`进行处理，类似于模式一
+   
+   - 对于每个文件，需要先**手动输入**基准`FOFA`查询语句，进而开始自动化指纹提取。
+   
+     ![image-20230713105953988](https://s2.loli.net/2023/07/13/58d23uaCsTVA4Sh.png)
 
 ### INDEX选择
 
@@ -82,12 +96,38 @@ menu = """
 - 每次运行，都将提示每个文件的索引
 - 若之前进行了提取操作但是中断了，可以通过输入索引，**手动**继续程序。
 
+### 文件用途介绍
 
-## 半自动注意事项
+- `FOFA_Extract_Fingerprint.py`：提取指纹主文件
+- `config.py`：用户设置的配置文件
+- `Default_value.py`：指纹提取模板信息文件，用户可根据需要进行增删修改，包括：
+  - `json_tmp`：输出`json`文件的模板（默认所有`level`为2）；
+  - `common_header`：屏蔽的`header`信息（即对于这些`header`，默认不会视作指纹）；
+  - `common_header_value`：屏蔽的`header value`：屏蔽的`header`内容；
+  - `file_common_names`：屏蔽的文件名字。
+- `fofa.py`：爬虫文件，修改自[Fofa-script](https://github.com/Cl0udG0d/Fofa-script)
+- `Tools.py`：相关函数文件
 
-### 已经进行过提取操作，之前提取的指纹都在 `output_path`中
-
-- 程序将根据
-
+## 批处理提取注意事项
 
 ### 从未进行过提取操作
+
+即输出文件路径中没有待提取文档的输出文件。
+
+- 需要用户手动输入指纹相关信息，进行**半自动**提取。
+
+- `product_name`，`company`，`industry`
+
+  ![image-20230713104404373](https://s2.loli.net/2023/07/13/LWeKAMoBD3p4U5V.png)
+
+- `rules`——`icon_hash`
+
+  ![image-20230713105120556](https://s2.loli.net/2023/07/13/M91g4XH8YFTmxuU.png)
+
+### 已经进行过提取操作，提取的指纹在 `output_path`中
+
+程序将根据输出文件路径中的文件，进行查询，如果输出文件中有待处理文件的输出文件（文件名按照上文格式规定进行判断）：
+
+- **则默认用户已经进行了`product_name`，`company`，`industry`，`level`以及`rules`中的`icon_hash`的手动填写**
+- 程序则跳过需要用户手动输入的`product_name`，`company`，`industry`以及`rules`中的`icon_hash`，**实现自动化提取`rules`**。
+
